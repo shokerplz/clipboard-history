@@ -276,10 +276,10 @@ fn handle_command<E>(
             Ok(Some(Message::LoadedFirstPage {
                 entries: entries.into(),
                 default_focused_id: {
-                    let mut main = database.main().rev();
-                    let first = main.next();
-                    main.next()
-                        .or(first)
+                    database
+                        .main()
+                        .rev()
+                        .next()
                         .or_else(|| database.favorites().next_back())
                         .as_ref()
                         .map(Entry::id)

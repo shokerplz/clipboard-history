@@ -58,8 +58,8 @@ fn main() -> Result<(), eframe::Error> {
         eframe::NativeOptions {
             viewport: ViewportBuilder::default()
                 .with_app_id("ringboard-egui")
-                .with_min_inner_size(Vec2::splat(100.))
-                .with_inner_size(Vec2::new(666., 777.))
+                .with_min_inner_size(Vec2::new(400., 200.))
+                .with_inner_size(Vec2::new(500., 380.))
                 .with_position(Pos2::ZERO),
             ..Default::default()
         },
@@ -79,7 +79,6 @@ fn main() -> Result<(), eframe::Error> {
 
                     controller(&command_receiver, |m| {
                         let r = if let Message::LoadedImage { id, image } = m {
-                            ringboard_loader.add(id, image);
                             Ok(())
                         } else {
                             response_sender.send(m)
@@ -338,7 +337,12 @@ impl eframe::App for App {
             .input_mut(|i| i.key_pressed(Key::ArrowDown) || i.consume_key(Modifiers::CTRL, Key::J));
 
         TopBottomPanel::top("search_bar")
-            .frame(Frame::side_top_panel(&ctx.style()).inner_margin(0.))
+            .frame(Frame::new().inner_margin(Margin {
+                left: 8,
+                right: 8,
+                top: 8,
+                bottom: 4,
+            }))
             .show(ctx, |ui| {
                 search_ui(
                     ui,
@@ -347,11 +351,14 @@ impl eframe::App for App {
                     up_pressed,
                     down_pressed,
                 );
+                ui.separator();
             });
         CentralPanel::default()
-            .frame(Frame::central_panel(&ctx.style()).inner_margin(Margin {
-                top: 5,
-                ..Margin::ZERO
+            .frame(Frame::new().inner_margin(Margin {
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
             }))
             .show(ctx, |ui| {
                 main_ui(
@@ -426,13 +433,18 @@ fn search_ui(
                 SearchKind::Mime => "Mime type search",
             })
             .font(match search_kind {
-                SearchKind::Plain => FontId::proportional(17.75),
-                SearchKind::Regex | SearchKind::Mime => FontId::monospace(16.),
+                SearchKind::Plain => FontId::proportional(14.),
+                SearchKind::Regex | SearchKind::Mime => FontId::monospace(13.),
             })
             .desired_width(f32::INFINITY)
             .cursor_at_end(true)
             .frame(false)
-            .margin(8.),
+            .margin(Margin {
+                left: 4,
+                right: 4,
+                top: 4,
+                bottom: 4,
+            }),
     );
     let mut reset = |query: &mut String| {
         remove_old_images(
@@ -585,7 +597,9 @@ fn main_ui(
         for (i, entry) in active_entries!(entries, state).iter().enumerate() {
             let next_was_favorites = entry.entry.ring() == RingKind::Favorites;
             if prev_was_favorites && !next_was_favorites {
+                ui.add_space(4.);
                 ui.separator();
+                ui.add_space(4.);
             }
             prev_was_favorites = next_was_favorites;
 
@@ -610,19 +624,22 @@ fn main_ui(
     if let Some(&id) = ui
         .input_mut(|input| {
             (0..10).find(|i| {
-                input.consume_key(Modifiers::CTRL, match i {
-                    0 => Key::Num0,
-                    1 => Key::Num1,
-                    2 => Key::Num2,
-                    3 => Key::Num3,
-                    4 => Key::Num4,
-                    5 => Key::Num5,
-                    6 => Key::Num6,
-                    7 => Key::Num7,
-                    8 => Key::Num8,
-                    9 => Key::Num9,
-                    _ => unreachable!(),
-                })
+                input.consume_key(
+                    Modifiers::CTRL,
+                    match i {
+                        0 => Key::Num0,
+                        1 => Key::Num1,
+                        2 => Key::Num2,
+                        3 => Key::Num3,
+                        4 => Key::Num4,
+                        5 => Key::Num5,
+                        6 => Key::Num6,
+                        7 => Key::Num7,
+                        8 => Key::Num8,
+                        9 => Key::Num9,
+                        _ => unreachable!(),
+                    },
+                )
             })
         })
         .and_then(|idx| fast_paste_buffer.get(idx))
@@ -677,7 +694,7 @@ fn entry_ui(
                 },
                 sections: {
                     let format = TextFormat {
-                        font_id: FontId::monospace(16.),
+                        font_id: FontId::proportional(13.),
                         color: ui.visuals().text_color(),
                         ..Default::default()
                     };
@@ -767,7 +784,12 @@ fn row_ui(
             });
     }
 
-    let frame_data = Frame::default().inner_margin(5.);
+    let frame_data = Frame::default().inner_margin(Margin {
+        left: 12,
+        right: 12,
+        top: 6,
+        bottom: 6,
+    });
     let mut frame = frame_data.begin(ui);
     frame.content_ui.add(widget);
     frame
@@ -1106,33 +1128,42 @@ mod system_fonts {
 
     pub fn add_system_fonts(fonts: &mut FontDefinitions) {
         const SYSTEM_FONTS: &[(&str, &[&str])] = &[
-            ("japanese", &[
-                "Noto Sans JP",
-                "Noto Sans CJK JP",
-                "Source Han Sans JP",
-                "MS Gothic",
-            ]),
+            (
+                "japanese",
+                &[
+                    "Noto Sans JP",
+                    "Noto Sans CJK JP",
+                    "Source Han Sans JP",
+                    "MS Gothic",
+                ],
+            ),
             ("korean", &["Source Han Sans KR"]),
             ("taiwanese", &["Source Han Sans TW"]),
-            ("simplified_chinese", &[
-                "Heiti SC",
-                "Songti SC",
-                "Noto Sans CJK SC",
-                "Noto Sans SC",
-                "WenQuanYi Zen Hei",
-                "SimSun",
-                "Noto Sans SC",
-                "PingFang SC",
-                "Source Han Sans CN",
-            ]),
+            (
+                "simplified_chinese",
+                &[
+                    "Heiti SC",
+                    "Songti SC",
+                    "Noto Sans CJK SC",
+                    "Noto Sans SC",
+                    "WenQuanYi Zen Hei",
+                    "SimSun",
+                    "Noto Sans SC",
+                    "PingFang SC",
+                    "Source Han Sans CN",
+                ],
+            ),
             ("traditional_chinese", &["Source Han Sans HK"]),
-            ("arabic_fonts", &[
-                "Noto Sans Arabic",
-                "Amiri",
-                "Lateef",
-                "Al Tarikh",
-                "Segoe UI",
-            ]),
+            (
+                "arabic_fonts",
+                &[
+                    "Noto Sans Arabic",
+                    "Amiri",
+                    "Lateef",
+                    "Al Tarikh",
+                    "Segoe UI",
+                ],
+            ),
         ];
 
         let system_source = SystemSource::new();
